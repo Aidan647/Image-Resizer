@@ -12,6 +12,9 @@
     "plugin:import/warnings",
     "plugin:import/typescript"
   ],
+  "rules": {
+	  "no-any": false
+  },
   "parser": "@typescript-eslint/parser",
   "settings": {
     "import/resolver": {

@@ -20,11 +20,11 @@ const createWindow = (): void => {
 			nodeIntegration: true,
 		},
 	})
-	ipcMain.on("open", async (event, args) => {
+	ipcMain.on("open", async (event, args: { index: number; data: any }) => {
 		try {
-			const { canceled, filePaths } = await dialog.showOpenDialog(args)
+			const { canceled, filePaths } = await dialog.showOpenDialog(args.data)
 			if (canceled) return event.sender.send("openResult", { error: "canceled" })
-			event.sender.send("openResult", { data: filePaths })
+			event.sender.send("openResult" + args.index, { data: filePaths })
 			console.log(filePaths)
 			// console.log(arguments)
 		} catch (error) {

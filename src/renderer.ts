@@ -27,18 +27,39 @@
  */
 
 import "./index.css"
-// import fs from "fs"
+import fs from "fs/promises"
 import electron from "electron"
-
-const sendEvent = async (channel: string, ...args: any[]) => {
-	return new Promise((resolve, reject) => {
+let EventIndex = 0
+const sendEvent = async (channel: string, data: any) => {
+	return new Promise<{ error?: string; data: any }>((resolve, reject) => {
 		try {
-			electron.ipcRenderer.once(channel + "Result", (event, args) => {
-				const { data, error } = args
-				if (error) return reject(error)
-				resolve(data)
+			electron.ipcRenderer.once(channel + "Result" + EventIndex, (event, args) => {
+				resolve(args)
 			})
-			electron.ipcRenderer.send(channel, ...args)
+			electron.ipcRenderer.send(channel, { index: EventIndex++, data })
+		} catch (e) {
+			reject(e)
+		}
+	})
+}
+
+const getFiles = async (files: string[]) => {
+	return new Promise<string[]>(async (resolve, reject) => {
+		try {
+			const promises: Promise<string[]>[] = []
+			files.forEach((element) => {
+				promises.push(
+					new Promise<string[]>(async (resolve, reject) => {
+						const result: string[] = []
+						if (await (await fs.lstat(element)).isDirectory()) {
+							result.push(...(await getFiles(await fs.readdir(element))))
+						}
+						resolve(result)
+					})
+				)
+			})
+			const data = await Promise.all(promises)
+			console.log(data)
 		} catch (e) {
 			reject(e)
 		}
@@ -46,10 +67,16 @@ const sendEvent = async (channel: string, ...args: any[]) => {
 }
 
 document.getElementById("createFile").addEventListener("click", async () => {
-	const result = await sendEvent("open", {
+	const { data, error }: { data: string[]; error?: string } = await sendEvent("open", {
 		properties: ["openFile", "openDirectory", "multiSelections"],
 	})
-	console.log(result)
+	if (error == "canceled") return
+	if (error) {
+		console.error(error)
+		return
+	}
+	getFiles(data)
+	console.log(data)
 	// try {
 	// 	const { canceled, filePaths } = await dialog.showOpenDialog({
 	// 		properties: ["openFile", "openDirectory"],
