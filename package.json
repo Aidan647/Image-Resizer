@@ -57,7 +57,8 @@
 									"name": "main_window"
 								}
 							]
-						}
+						},
+						"port": 65000
 					}
 				]
 			]

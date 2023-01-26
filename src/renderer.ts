@@ -30,6 +30,7 @@ import "./index.css"
 import fs from "fs/promises"
 import electron from "electron"
 let EventIndex = 0
+console.log(fs)
 const sendEvent = async (channel: string, data: any) => {
 	return new Promise<{ error?: string; data: any }>((resolve, reject) => {
 		try {
